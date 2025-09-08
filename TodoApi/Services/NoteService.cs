@@ -1,4 +1,6 @@
-﻿using TodoApi.DTOs;
+﻿using System.Security.Claims;
+using TodoApi.DTOs;
+using TodoApi.Models;
 using TodoApi.Repository;
 
 namespace TodoApi.Services;
@@ -14,7 +16,7 @@ public class NoteService : INoteService
         _repository = repository;
     }
 
-    public async Task<NoteDto> AddAsync(CreateNoteDto createNoteDto)
+    public async Task<NoteDto> AddAsync(CreateNoteDto createNoteDto, int userId)
     {
         if (string.IsNullOrWhiteSpace(createNoteDto.Title) || string.IsNullOrWhiteSpace(createNoteDto.Description))
         {
@@ -22,10 +24,7 @@ public class NoteService : INoteService
             return null!;
         }
 
-        
-
-
-        var noteDto = await _repository.AddAsync(createNoteDto);
+        var noteDto = await _repository.AddAsync(createNoteDto, userId);
 
         if (noteDto is null)
         {
@@ -42,6 +41,8 @@ public class NoteService : INoteService
     public async Task<IEnumerable<NoteDto>> GetAllAsync()
         => await _repository.GetAllAsync();
 
+    public async Task<IEnumerable<NoteDto>> GetAllByUserIdAsync(int userId)
+        => await _repository.GetAllByUserIdAsync(userId);
 
     public async Task<bool> UpdateAsync(int id, UpdateNoteDto updateNoteDto)
     {
@@ -52,12 +53,12 @@ public class NoteService : INoteService
         }
 
         var updateSuccess = await _repository.UpdateAsync(id, updateNoteDto);
+
         if (!updateSuccess)
         {
             _logger.LogWarning("Something went wrong adding the note.");
             return false;
         }
-        await _repository.SaveChangesAsync();
 
         return updateSuccess;
     }

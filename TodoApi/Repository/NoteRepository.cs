@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Security.Claims;
 using TodoApi.Data;
 using TodoApi.DTOs;
 using TodoApi.Models;
@@ -20,14 +21,16 @@ public class NoteRepository : INoteRepository
     }
 
 
-    public async Task<NoteDto> AddAsync(CreateNoteDto createNoteDto)
+    public async Task<NoteDto> AddAsync(CreateNoteDto createNoteDto, int userId)
     {
         try
         {
             var note = new Note
             {
                 Title = createNoteDto.Title,
-                Description = createNoteDto.Description
+                Description = createNoteDto.Description,
+                CreatedAt = DateTime.UtcNow,
+                UserId = userId
             };
 
             await _dbContext.AddAsync(note);
@@ -38,10 +41,11 @@ public class NoteRepository : INoteRepository
                 Id = note.Id,
                 Title = note.Title,
                 Description = note.Description,
-                CreatedAt = note.CreatedAt
+                CreatedAt = note.CreatedAt,
+                UserId = note.UserId
             };
         }
-        catch (DbException e)
+        catch (DbUpdateException e)
         {
             _logger.LogError(e, "Database error while adding note.");
             return null!;
@@ -52,8 +56,6 @@ public class NoteRepository : INoteRepository
             return null!;
         }
     }
-
-
 
     public async Task<NoteDto> GetByIdAsync(int id)
     {
@@ -79,6 +81,36 @@ public class NoteRepository : INoteRepository
 
         }
         catch (DbException e)
+        {
+            _logger.LogError(e, "Database error while retrieving note.");
+            return null!;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Unexpected error while retrieving note.");
+            return null!;
+        }
+    }
+
+    public async Task<IEnumerable<NoteDto>> GetAllByUserIdAsync(int userId)
+    {
+        try
+        {
+            var notes = await _dbContext.Note
+                .AsNoTracking()
+                .Where(n => n.UserId == userId)
+                .Select(n => new NoteDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Description = n.Description,
+                    CreatedAt = n.CreatedAt
+                })
+                .ToListAsync();
+
+            return notes;
+        }
+        catch (DbUpdateException e)
         {
             _logger.LogError(e, "Database error while retrieving note.");
             return null!;
@@ -118,7 +150,6 @@ public class NoteRepository : INoteRepository
             return null!;
         }
     }
-
     public async Task<bool> UpdateAsync(int id, UpdateNoteDto updateNoteDto)
     {
         try
@@ -161,8 +192,8 @@ public class NoteRepository : INoteRepository
             if (rowsAff < 1)
             {
                 _logger.LogWarning("Something went wrong deleting note. Check if ID is valid.");
+                return false;
             }
-
 
             await _dbContext.SaveChangesAsync();
 
@@ -180,6 +211,4 @@ public class NoteRepository : INoteRepository
             return false;
         }
     }
-
-
 }

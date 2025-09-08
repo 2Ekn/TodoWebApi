@@ -24,6 +24,9 @@ public class UserController : Controller
             return BadRequest(ModelState);
         }
 
+
+
+
         var userDto = await _userService.AddAsync(user);
 
         if (userDto is null)

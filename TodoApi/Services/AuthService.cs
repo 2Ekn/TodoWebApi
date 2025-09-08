@@ -16,6 +16,4 @@ public class AuthService : IAuthService
     public async Task<string> LoginUserAsync(LoginUserDto user)
        => await _repository.LoginUserAsync(user);
 
-
-
 }
