@@ -1,0 +1,11 @@
+﻿using TodoApi.DTOs;
+
+namespace TodoApi.Services;
+public interface INoteService
+{
+    Task<NoteDto> AddAsync(CreateNoteDto createNoteDto);
+    Task<bool> DeleteAsync(int id);
+    Task<IEnumerable<NoteDto>> GetAllAsync();
+    Task<NoteDto> GetByIdAsync(int id);
+    Task<bool> UpdateAsync(int id, UpdateNoteDto updateNoteDto);
+}

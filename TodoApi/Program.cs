@@ -50,6 +50,10 @@ namespace TodoApi
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
 
+            builder.Services.AddScoped<INoteRepository, NoteRepository>();
+            builder.Services.AddScoped<INoteService, NoteService>();
+
+
             var app = builder.Build();
 
             app.MapControllers();

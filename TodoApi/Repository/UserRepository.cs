@@ -157,16 +157,15 @@ public class UserRepository : IUserRepository
     {
         try
         {
-            var userFromDb = await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Id == id);
+           var rowsAff = await _dbContext.Users
+                .Where(u => u.Id == id)
+                .ExecuteDeleteAsync();
 
-            if (userFromDb is null)
+            if (rowsAff < 1)
             {
-                _logger.LogWarning("Could not find user with ID: {UserId}", id);
+                _logger.LogWarning("Something went wrong deleting user. Check if ID: {id} is valid", id);
                 return false;
             }
-
-            _dbContext.Users.Remove(userFromDb);
             await _dbContext.SaveChangesAsync();
 
             return true;
